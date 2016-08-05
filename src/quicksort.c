@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <assert.h>
 #include <sys/time.h>
 
 struct timeval start;
@@ -41,10 +41,16 @@ static
 void printarray(int* arr, size_t len)
 {
     puts("[");
+    int ct = 1;
     for (size_t i = 0; i < len; ++i) {
-        printf("%d\n", arr[i]);
+        if (ct % 20 != 0) {
+            printf("%d, ", arr[i]);
+        } else {
+            printf("%d\n", arr[i]);
+        }
+        ++ct;
     }
-    puts("]");
+    puts("\b]");
 }
 
 static const int doshuffle = 0;
@@ -53,8 +59,12 @@ static const int domedian = 1;
 static
 int issorted(int* arr, size_t len)
 {
+    if (len <= 1) {
+        return 1;
+    }
     for (size_t i = 0; i < len - 1; ++i) {
         if (arr[i] > arr[i + 1]) {
+            fprintf(stderr, "Found %d before %d at index %zu\n", arr[i], arr[i + 1], i);
             return 0;
         }
     }
@@ -76,6 +86,18 @@ static
 void partition(int* arr, size_t len, size_t* plt, size_t* pgt)
 {
     if (len < 2) {
+        *plt = *pgt = 0;
+        return;
+    }
+
+    if (len == 2) {
+        if (arr[0] > arr[1]) {
+            int temp = arr[0];
+            arr[0] = arr[1];
+            arr[1] = temp;
+        }
+        *plt = 0;
+        *pgt = 1;
         return;
     }
     
@@ -114,13 +136,11 @@ void partition(int* arr, size_t len, size_t* plt, size_t* pgt)
     size_t i = 0;
     size_t j = len - 1;
 
-    while (i < len) {
+    while (i <= j) {
         if (arr[i] < pivot) {
-            if (lt != i) {
-                int temp = arr[lt];
-                arr[lt] = arr[i];
-                arr[i] = temp;
-            }
+            int temp = arr[lt];
+            arr[lt] = arr[i];
+            arr[i] = temp;
             ++lt;
             ++i;
         } else if (arr[i] == pivot) {
@@ -130,9 +150,6 @@ void partition(int* arr, size_t len, size_t* plt, size_t* pgt)
             arr[j] = arr[i];
             arr[i] = temp;
             --j;
-        }
-        if (i >= j) {
-            break;
         }
     }
     
@@ -157,7 +174,7 @@ void insertionsort(int* arr, size_t len)
     }
 }
 
-static const size_t CUTOFF = 1000;
+static const size_t CUTOFF = 800;
 
 static
 void quicksort(int* arr, size_t len)
@@ -175,7 +192,9 @@ void quicksort(int* arr, size_t len)
     size_t gt;
     partition(arr, len, &lt, &gt);
     quicksort(arr, lt);
+    assert(issorted(arr, lt));
     quicksort(arr + gt, len - gt);
+    assert(issorted(arr + gt, len - gt));
 }
 
 static int* ARR = 0;
@@ -185,11 +204,15 @@ int main(int argc, const char* argv[])
     // num array elements
     int n = atoi(argv[1]);
     ARR = malloc(sizeof(int)*n);
+    
+    FILE* f = fopen(argv[2], "r");
+    char buf[80] = { '\0' };
+    size_t sz = 79;
     for (size_t i = 0; i < n; ++i) {
-        ARR[i] = (n - i);
+        ARR[i] = atoi(fgets(buf, sz, f));
     }
+    fclose(f);
 
-    //shuffle(ARR, n);
     (void)printarray;
     //printarray(ARR, n);
 
