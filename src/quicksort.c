@@ -47,6 +47,20 @@ void printarray(int* arr, size_t len)
     puts("]");
 }
 
+static const int doshuffle = 0;
+static const int domedian = 0;
+
+static
+int issorted(int* arr, size_t len)
+{
+    for (size_t i = 0; i < len - 1; ++i) {
+        if (arr[i] > arr[i + 1]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 static
 void shuffle(int* arr, size_t len)
 {
@@ -57,8 +71,6 @@ void shuffle(int* arr, size_t len)
         arr[i] = temp;
     }
 }
-
-static const int doshuffle = 0;
 
 static
 size_t partition(int* arr, size_t len)
@@ -71,6 +83,27 @@ size_t partition(int* arr, size_t len)
     if (doshuffle) {
         shuffle(arr, len);
         pivotidx = 0;
+    } else if (domedian) {
+        size_t x = randnum() % len;
+        size_t y = randnum() % len;
+        size_t z = randnum() % len;
+        if (arr[x] < arr[y]) {
+            if (arr[y] < arr[z]) {
+                pivotidx = y;
+            } else if (arr[x] < arr[z]) {
+                pivotidx = z;
+            } else {
+                pivotidx = x;
+            }
+        } else {
+            if (arr[x] < arr[z]) {
+                pivotidx = x;
+            } else if (arr[z] < arr[y]) {
+                pivotidx = y;
+            } else {
+                pivotidx = z;
+            }
+        }
     } else {
         pivotidx = len/2;
     }
@@ -102,7 +135,7 @@ size_t partition(int* arr, size_t len)
         if (i >= j) {
             int temp = arr[j];
             arr[j] = pivot;
-            arr[0] = temp;
+            arr[pivotidx] = temp;
             break;
         } else {
             int temp = arr[j];
@@ -116,25 +149,50 @@ size_t partition(int* arr, size_t len)
 }
 
 static
+void insertionsort(int* arr, size_t len)
+{
+    for (size_t i = 0; i < len; ++i) {
+        int val = arr[i];
+        size_t j = i;
+        for (; j >= 1; --j) {
+            if (arr[j - 1] > val) {
+                arr[j] = arr[j - 1];
+            } else {
+                break;
+            }
+        }
+        arr[j] = val;
+    }
+}
+
+static const size_t CUTOFF = 1000;
+
+static
 void quicksort(int* arr, size_t len)
 {
     if (len < 2) {
         return;
     }
+
+    if (len < CUTOFF) {
+        insertionsort(arr, len);
+        return;
+    }
+
     size_t mid = partition(arr, len);
     quicksort(arr, mid);
     quicksort(arr + mid + 1, len - mid - 1);
 }
 
-static const size_t NUM_EL = 1000000;
-static int ARR[NUM_EL];
+static int* ARR = 0;
 
 int main(int argc, const char* argv[])
 {
     // num array elements
     int n = atoi(argv[1]);
+    ARR = malloc(sizeof(int)*n);
     for (size_t i = 0; i < n; ++i) {
-        ARR[i] = i;
+        ARR[i] = (n-i);
     }
 
     //shuffle(ARR, n);
@@ -147,4 +205,6 @@ int main(int argc, const char* argv[])
     markend();
     puts("Sorted...");
     //printarray(ARR, n);
+
+    return !issorted(ARR, n);
 }
