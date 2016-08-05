@@ -27,3 +27,7 @@ set(PROJ_SUBDIRS  unittest; doc; tools; test)
 foreach(subdir ${PROJ_SUBDIRS})
   add_subdirectory(${subdir})
 endforeach(subdir)
+
+add_exe(quicksort src/quicksort.c)
+
+add_dependencies(check quicksort)
