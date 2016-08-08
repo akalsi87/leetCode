@@ -29,5 +29,7 @@ foreach(subdir ${PROJ_SUBDIRS})
 endforeach(subdir)
 
 add_exe(quicksort src/quicksort.c)
+add_exe(rbtree src/rbtree.c)
 
 add_dependencies(check quicksort)
+add_dependencies(check rbtree)
